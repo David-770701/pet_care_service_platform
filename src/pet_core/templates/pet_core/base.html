@@ -1,0 +1,198 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pet Service Platform{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+                <img src="{% static 'pet_core/logo/logo.svg' %}" alt="Pet Platform Logo" style="width:44px; height:44px;">
+                <span>Pet Platform</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="{% url 'service_list' %}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Services
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><h6 class="dropdown-header">Choose a category</h6></li>
+                                {% for cat in service_categories %}
+                                    <li><a class="dropdown-item" href="{% url 'service_list' %}?category={{ cat.id }}">{{ cat.name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'merchant_list' %}">Merchants</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link text-info fw-bold" href="{% if user.role == 'owner' %}{% url 'owner_dashboard' %}{% elif user.role == 'merchant' %}{% url 'merchant_dashboard' %}{% elif user.role == 'admin' %}{% url 'admin_dashboard' %}{% else %}#{% endif %}">
+                                Dashboard ({{ user.username }})
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-5 flex-grow-1">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    {% if vaccine_popup %}
+    <div class="modal fade" id="vaccineReminderModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Vaccine Reminder</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Your pet has a vaccine due within 3 days:</p>
+                    <ul class="mb-0">
+                        {% for item in vaccine_popup %}
+                            <li><strong>{{ item.pet_name }}</strong> - {{ item.vaccine_name }} (Due: {{ item.next_due_date }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light text-center py-3 mt-auto">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 Pet Service Platform. All Rights Reserved. COMP3013 Database Management System Project.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function bindConfirmHandlers(root) {
+                const scope = root || document
+
+                scope.querySelectorAll('input[name="confirmed"]').forEach(function (el) {
+                    el.value = ''
+                })
+
+                scope.querySelectorAll('form[data-confirm]').forEach(function (form) {
+                    if (form.getAttribute('data-confirm-bound') === '1') {
+                        return
+                    }
+                    form.setAttribute('data-confirm-bound', '1')
+
+                    form.addEventListener('submit', function (e) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (typeof e.stopImmediatePropagation === 'function') {
+                        e.stopImmediatePropagation()
+                    }
+
+                    let hidden = form.querySelector('input[name="confirmed"]')
+                    if (!hidden) {
+                        hidden = document.createElement('input')
+                        hidden.type = 'hidden'
+                        hidden.name = 'confirmed'
+                        form.appendChild(hidden)
+                    }
+                    hidden.value = ''
+
+                    const msg = form.getAttribute('data-confirm') || 'Are you sure?'
+                    if (!window.confirm(msg)) {
+                        return
+                    }
+
+                    hidden.value = '1'
+                    form.submit()
+                    }, true)
+                })
+
+                scope.querySelectorAll('a[data-confirm]').forEach(function (el) {
+                    if (el.getAttribute('data-confirm-bound') === '1') {
+                        return
+                    }
+                    el.setAttribute('data-confirm-bound', '1')
+
+                    el.addEventListener('click', function (e) {
+                    if (el.closest('form[data-confirm]')) {
+                        return
+                    }
+
+                    const href = el.getAttribute('href')
+                    if (!href || href === '#') {
+                        return
+                    }
+
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (typeof e.stopImmediatePropagation === 'function') {
+                        e.stopImmediatePropagation()
+                    }
+
+                    const msg = el.getAttribute('data-confirm') || 'Are you sure?'
+                    if (!window.confirm(msg)) {
+                        return
+                    }
+                    window.location.href = href
+                    }, true)
+                })
+            }
+
+            window.petPlatformBindConfirmHandlers = bindConfirmHandlers
+            bindConfirmHandlers(document)
+
+            {% if vaccine_popup %}
+            const modalEl = document.getElementById('vaccineReminderModal')
+            if (modalEl) {
+                const modal = new bootstrap.Modal(modalEl)
+                modal.show()
+            }
+            {% endif %}
+        })
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

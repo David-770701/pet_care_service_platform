@@ -1,0 +1,32 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Login - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0 text-center">Sign In</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required autofocus>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2">Login</button>
+                </form>
+                <div class="mt-3 text-center">
+                    Don't have an account? <a href="{% url 'register' %}">Register here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Reviews - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <h2>Review Moderation</h2>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-12 col-md-6">
+                <label class="form-label mb-1">Search by username</label>
+                <input name="username" class="form-control" value="{{ username }}" placeholder="Exact match. Use * for wildcard, e.g. alice* or *ali*">
+            </div>
+            <div class="col-12 col-md-6 d-flex gap-2">
+                <button class="btn btn-primary" type="submit">Search</button>
+                <a class="btn btn-outline-secondary" href="{% url 'admin_review_list' %}">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Store</th>
+                    <th>Service</th>
+                    <th>User</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in page_obj %}
+                <tr>
+                    <td>{{ r.order.service.merchant.store_name }}</td>
+                    <td class="text-muted">{{ r.order.service.name }}</td>
+                    <td>{{ r.order.owner.user.username }}</td>
+                    <td class="text-warning">★ {{ r.rating }}</td>
+                    <td style="max-width: 380px;" class="text-muted">{{ r.comment|truncatechars:80 }}</td>
+                    <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <form method="POST" action="{% url 'admin_delete_review' r.order_id %}" data-confirm="Delete this review?">
+                            {% csrf_token %}
+                            <input type="hidden" name="confirmed" value="">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No reviews found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="{% url 'admin_review_list' %}?username={{ username|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="{% url 'admin_review_list' %}?username={{ username|urlencode }}&page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

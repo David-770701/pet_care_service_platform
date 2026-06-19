@@ -1,0 +1,40 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Edit Pet - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Edit Pet: {{ pet.name }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Pet Name</label>
+                        <input type="text" name="name" class="form-control" value="{{ pet.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Age</label>
+                        <input type="number" name="age" class="form-control" min="0" value="{{ pet.age }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Weight (kg)</label>
+                        <input type="number" step="0.1" name="weight" class="form-control" value="{{ pet.weight|default_if_none:'' }}">
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'owner_dashboard' %}" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

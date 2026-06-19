@@ -1,0 +1,67 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Manage Service - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white p-3">
+                <h5 class="mb-0">{% if service %}Edit Service{% else %}Add New Service{% endif %}</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Service Name</label>
+                        <input type="text" name="name" class="form-control" value="{{ service.name|default:'' }}" required>
+                        <div class="form-text">Must be unique within your store.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Category</label>
+                        <select name="category" class="form-select" required>
+                            <option value="" disabled {% if not service %}selected{% endif %}>Select a category...</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if service and service.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">Price (¥)</label>
+                            <input type="number" step="0.01" name="price" class="form-control" value="{{ service.price|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea name="description" class="form-control" rows="3" required>{{ service.description|default:'' }}</textarea>
+                    </div>
+
+                    {% if show_vaccine_toggle %}
+                    <div class="mb-4 form-check">
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            id="is_vaccine_service"
+                            name="is_vaccine_service"
+                            {% if service and service.is_vaccine_service %}checked{% endif %}
+                        >
+                        <label class="form-check-label" for="is_vaccine_service">Is Vaccine Service?</label>
+                        <div class="form-text">Only available for medical services.</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'merchant_dashboard' %}" class="btn btn-light px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-5">{% if service %}Save Changes{% else %}Add Service{% endif %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

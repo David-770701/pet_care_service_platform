@@ -1,0 +1,143 @@
+{% extends 'pet_core/base.html' %}
+{% load static %}
+
+{% block title %}Browse Services - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-0">Explore Pet Services</h2>
+            <div class="text-muted small mt-1">
+                {% if selected_category %}
+                    Category: <strong>{{ selected_category.name }}</strong>
+                {% else %}
+                    Choose a category from the navigation bar.
+                {% endif %}
+                {% if province %}
+                    | Location: <strong>{{ province }}{% if city %} {{ city }}{% endif %}</strong>
+                {% endif %}
+            </div>
+        </div>
+
+        <form class="d-flex flex-wrap gap-2 justify-content-end" method="GET" action="{% url 'service_list' %}">
+            <input type="hidden" name="category" value="{{ selected_cat }}">
+            <select id="filterProvince" name="province" class="form-select" style="max-width: 220px;"></select>
+            <select id="filterCity" name="city" class="form-select" style="max-width: 220px;"></select>
+            <select id="filterDistrict" class="form-select d-none"></select>
+
+            <input type="text" name="q" class="form-control" placeholder="Search by store or service name" value="{{ query }}" style="min-width: 260px;">
+            <button class="btn btn-outline-primary" type="submit">Search</button>
+        </form>
+    </div>
+</div>
+
+{% if not query and not selected_category %}
+    <div class="alert alert-info">Please choose a service category from the navigation bar to view services.</div>
+{% endif %}
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for service in pinned_services %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border border-warning">
+            <div class="card-header bg-white border-bottom-0 pt-3">
+                <span class="badge bg-secondary mb-2">{{ service.category.name }}</span>
+                <h5 class="card-title text-primary mb-0">{{ service.name }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text text-muted small">{{ service.description|truncatechars:60 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="fs-5 fw-bold text-success">¥{{ service.price }}</span>
+                </div>
+            </div>
+            <div class="card-footer bg-light border-top-0 pb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="d-block text-muted">Provided by:</small>
+                        <strong>{{ service.merchant.store_name }}</strong>
+                        <span class="text-warning">★ {{ service.merchant.average_rating }}</span>
+                    </div>
+                    {% if user.is_authenticated and user.role == 'owner' %}
+                        <a href="{% url 'book_service' service.id %}" class="btn btn-primary btn-sm px-3 rounded-pill">Book</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% for service in page_obj %}
+    {% if service.id not in pinned_service_ids %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white border-bottom-0 pt-3">
+                <span class="badge bg-secondary mb-2">{{ service.category.name }}</span>
+                <h5 class="card-title text-primary mb-0">{{ service.name }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text text-muted small">{{ service.description|truncatechars:60 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="fs-5 fw-bold text-success">¥{{ service.price }}</span>
+                </div>
+            </div>
+            <div class="card-footer bg-light border-top-0 pb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="d-block text-muted">Provided by:</small>
+                        <strong>{{ service.merchant.store_name }}</strong>
+                        <span class="text-warning">★ {{ service.merchant.average_rating }}</span>
+                    </div>
+                    {% if user.is_authenticated and user.role == 'owner' %}
+                        <a href="{% url 'book_service' service.id %}" class="btn btn-primary btn-sm px-3 rounded-pill">Book</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    {% if not pinned_services %}
+    <div class="col-12 text-center py-5">
+        <h4 class="text-muted">No services found.</h4>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="{% url 'service_list' %}?category={{ selected_cat }}&province={{ province|urlencode }}&city={{ city|urlencode }}&q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="{% url 'service_list' %}?category={{ selected_cat }}&province={{ province|urlencode }}&city={{ city|urlencode }}&q={{ query|urlencode }}&page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% block extra_js %}
+<script src="{% static 'pet_core/address_cn_3level_cdn.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof window.initCnProvinceCityDistrict !== 'function') return
+        window.initCnProvinceCityDistrict({
+            provinceSelectId: 'filterProvince',
+            citySelectId: 'filterCity',
+            districtSelectId: 'filterDistrict',
+            initialProvince: '{{ province|escapejs }}',
+            initialCity: '{{ city|escapejs }}',
+            initialDistrict: ''
+        })
+    })
+</script>
+{% endblock %}
+{% endblock %}

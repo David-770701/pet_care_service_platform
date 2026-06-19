@@ -1,0 +1,43 @@
+<div class="table-responsive">
+    <table class="table table-sm table-bordered align-middle mb-0 bg-white">
+        <thead class="table-light">
+            <tr>
+                <th style="min-width: 220px;">Name</th>
+                <th style="min-width: 120px;">Category</th>
+                <th style="min-width: 110px;">Approval</th>
+                <th style="min-width: 220px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in services %}
+            <tr>
+                <td>
+                    <strong>{{ s.name }}</strong><br>
+                    <small class="text-muted">{{ s.description|truncatechars:60 }}</small>
+                </td>
+                <td class="text-muted">{% if s.category %}{{ s.category.name }}{% else %}-{% endif %}</td>
+                <td>
+                    {% if s.approval_status == 'approved' %}
+                        <span class="badge bg-success">Approved</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form method="POST" action="{% url 'admin_approve_service' s.id %}" data-confirm="Approve and publish this service?">
+                            {% csrf_token %}
+                            <input type="hidden" name="confirmed" value="">
+                            <button type="submit" class="btn btn-sm btn-outline-success" {% if s.approval_status == 'approved' %}disabled{% endif %}>Approve</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center text-muted">No services</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,87 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Edit Store - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white p-3">
+                <h5 class="mb-0">Edit Store Profile</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Store Name</label>
+                        <input type="text" name="store_name" class="form-control" value="{{ merchant.store_name }}" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Contact Phone</label>
+                            <input type="text" name="contact_phone" class="form-control" value="{{ merchant.contact_phone }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Operating Hours</label>
+                            <input type="text" name="operating_hours" class="form-control" value="{{ merchant.operating_hours }}" placeholder="e.g., 9:00-18:00">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Province / City</label>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <select name="province" class="form-select" id="merchantProvinceSelect" required></select>
+                            </div>
+                            <div class="col-md-6">
+                                <select name="city" class="form-select" id="merchantCitySelect" required></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">District</label>
+                        <select name="district" class="form-select" id="merchantDistrictSelect" required></select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Detailed Address</label>
+                        <textarea name="address_detail" class="form-control" rows="2" required>{{ initial_address_detail }}</textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Store Description</label>
+                        <textarea name="description" class="form-control" rows="4" placeholder="Tell customers about your store...">{{ merchant.description }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'merchant_dashboard' %}" class="btn btn-light px-4">Cancel</a>
+                        <button type="submit" class="btn btn-dark px-5">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'pet_core/address_cn_3level_cdn.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof window.initCnProvinceCityDistrict === 'function') {
+            window.initCnProvinceCityDistrict({
+                provinceSelectId: 'merchantProvinceSelect',
+                citySelectId: 'merchantCitySelect',
+                districtSelectId: 'merchantDistrictSelect',
+                initialProvince: '{{ initial_province|escapejs }}',
+                initialCity: '{{ initial_city|escapejs }}',
+                initialDistrict: '{{ initial_district|escapejs }}'
+            })
+        }
+    })
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}My Favorite Stores - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <h2>My Favorite Stores</h2>
+        <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for fav in favorites %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-danger border-opacity-25">
+            <div class="card-body text-center py-4">
+                <h5 class="card-title mb-1">
+                    <a href="{% url 'merchant_detail' fav.merchant.user_id %}" class="text-decoration-none text-dark">{{ fav.merchant.store_name }}</a>
+                </h5>
+                <p class="text-warning fs-5 mb-2">★ {{ fav.merchant.average_rating }}</p>
+                <p class="text-muted small"><i class="bi bi-geo-alt"></i> {{ fav.merchant.province }} {{ fav.merchant.city }} {{ fav.merchant.district }} {{ fav.merchant.address_detail }}</p>
+                <form method="POST" action="{% url 'toggle_favorite' fav.merchant.user_id %}" data-confirm="Remove this store from favorites?">
+                    {% csrf_token %}
+                    <input type="hidden" name="confirmed" value="">
+                    <button type="submit" class="btn btn-sm btn-danger mt-2">Remove from Favorites</button>
+                </form>
+            </div>
+            <div class="card-footer bg-light text-muted small text-center">
+                Added on {{ fav.created_at|date:"M d, Y" }}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <h4 class="text-muted">You haven't favorited any stores yet.</h4>
+        <a href="{% url 'merchant_list' %}" class="btn btn-primary mt-3">Browse Merchants</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}My Reviews - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <h2>My Reviews</h2>
+        <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm border-0">
+            <ul class="list-group list-group-flush">
+                {% for review in reviews %}
+                <li class="list-group-item p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="mb-1"><a href="{% url 'merchant_detail' review.order.service.merchant.user_id %}" class="text-decoration-none">{{ review.order.service.merchant.store_name }}</a></h5>
+                            <span class="text-muted small">Service: {{ review.order.service.name }} | Date: {{ review.created_at|date:"Y-m-d" }}</span>
+                        </div>
+                        <div class="text-warning fs-5">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="mb-0 mt-3">{{ review.comment|default:"This user did not leave a comment." }}</p>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center py-5 text-muted">
+                    You haven't written any reviews yet.
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

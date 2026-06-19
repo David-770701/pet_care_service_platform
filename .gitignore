@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local Django/runtime files
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+.env
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Data collection, preprocessing, and local datasets
+Data scraping/
+final_data/
+src/bootstrap_final_data.py
+src/pet_core/management/commands/load_final_data.py

@@ -1,0 +1,177 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Merchants - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <h2>Store Management</h2>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label mb-1">Merchant Status</label>
+                <select name="status" class="form-select">
+                    <option value="" {% if not filter_status %}selected{% endif %}>All</option>
+                    <option value="active" {% if filter_status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="banned" {% if filter_status == 'banned' %}selected{% endif %}>Banned</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label mb-1">Pending Services</label>
+                <select name="pending_services" class="form-select">
+                    <option value="" {% if not filter_pending_services %}selected{% endif %}>All</option>
+                    <option value="has" {% if filter_pending_services == 'has' %}selected{% endif %}>Has Pending</option>
+                    <option value="none" {% if filter_pending_services == 'none' %}selected{% endif %}>No Pending</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4 d-flex gap-2">
+                <button class="btn btn-primary" type="submit">Apply</button>
+                <a class="btn btn-outline-secondary" href="{% url 'admin_merchant_list' %}">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Store</th>
+                    <th>Username</th>
+                    <th>Status</th>
+                    <th>Rating</th>
+                    <th>Address</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in page_obj %}
+                <tr>
+                    <td><a href="{% url 'merchant_detail' m.user_id %}" class="text-decoration-none">{{ m.store_name }}</a></td>
+                    <td class="text-muted">{{ m.user.username }}</td>
+                    <td>
+                        {% if m.is_verified %}
+                            {% if m.user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Banned</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-warning">★ {{ m.average_rating }}</td>
+                    <td class="text-muted">{{ m.province }} {{ m.city }} {{ m.district }} {{ m.address_detail }}</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if not m.is_verified and not m.user.is_active %}
+                                <form method="POST" action="{% url 'admin_approve_merchant' m.user_id %}" data-confirm="Approve this merchant?">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="confirmed" value="">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Approve</button>
+                                </form>
+                                <form method="POST" action="{% url 'admin_reject_merchant' m.user_id %}" data-confirm="Reject this merchant registration?">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="confirmed" value="">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Reject</button>
+                                </form>
+                            {% else %}
+                                <form method="POST" action="{% url 'admin_delete_merchant' m.user_id %}" data-confirm="Toggle merchant ban/unban? This does not delete the account.">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="confirmed" value="">
+                                    {% if m.user.is_active %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Ban</button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Unban</button>
+                                    {% endif %}
+                                </form>
+                            {% endif %}
+
+                            <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#services-{{ m.user_id }}" aria-expanded="false" aria-controls="services-{{ m.user_id }}">
+                                Check Services ({{ m.services_count }})
+                            </button>
+
+                            <div class="collapse mt-2" id="services-{{ m.user_id }}">
+                                <div class="card card-body border-0 bg-light">
+                                    <div
+                                        class="admin-services-fragment"
+                                        data-url="{% url 'admin_merchant_services_fragment' m.user_id %}"
+                                        data-loaded="0"
+                                    >
+                                        <div class="text-muted d-flex align-items-center gap-2">
+                                            <div class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></div>
+                                            <span>Loading...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No merchants found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="{% url 'admin_merchant_list' %}?status={{ filter_status|urlencode }}&pending_services={{ filter_pending_services|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="{% url 'admin_merchant_list' %}?status={{ filter_status|urlencode }}&pending_services={{ filter_pending_services|urlencode }}&page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.collapse[id^="services-"]').forEach(function (collapseEl) {
+            collapseEl.addEventListener('show.bs.collapse', function () {
+                const frag = collapseEl.querySelector('.admin-services-fragment')
+                if (!frag || frag.getAttribute('data-loaded') === '1') {
+                    return
+                }
+                const url = frag.getAttribute('data-url')
+                if (!url) {
+                    return
+                }
+                fetch(url, { credentials: 'same-origin' })
+                    .then(function (r) { return r.text() })
+                    .then(function (html) {
+                        frag.innerHTML = html
+                        frag.setAttribute('data-loaded', '1')
+                        if (window.petPlatformBindConfirmHandlers) {
+                            window.petPlatformBindConfirmHandlers(frag)
+                        }
+                    })
+                    .catch(function () {
+                        frag.innerHTML = '<div class="text-danger">Failed to load services.</div>'
+                    })
+            })
+        })
+    })
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'pet_core/base.html' %}
+{% load static %}
+
+{% block title %}Home - Pet Service Platform{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background:
+            linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.55)),
+            url("{% static 'pet_core/backgroud/background5.jpg' %}") no-repeat center center fixed;
+        background-size: cover;
+    }
+</style>
+<div class="row text-center mt-5">
+    <div class="col-md-12">
+        <h1 class="display-4 font-weight-bold">Welcome to Pet Service Platform 🐾</h1>
+        <p class="lead text-muted mt-3">The best place for Pet Boarding, Grooming, Washing, Playing, and Medical Services.</p>
+        <hr class="my-4">
+        <p>Explore thousands of services provided by our verified merchants.</p>
+    </div>
+</div>
+
+<div class="row mt-5 text-center">
+    <div class="col-md-4">
+        <h3>5,000+ Services</h3>
+        <p>From grooming to medical care.</p>
+    </div>
+    <div class="col-md-4">
+        <h3>Verified Merchants</h3>
+        <p>Top-rated stores for your pets.</p>
+    </div>
+    <div class="col-md-4">
+        <h3>Easy Booking</h3>
+        <p>Book appointments in just a few clicks.</p>
+    </div>
+</div>
+{% endblock %}

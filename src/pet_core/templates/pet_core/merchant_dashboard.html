@@ -1,0 +1,130 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Merchant Dashboard - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm border-0 bg-dark text-white">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">{{ merchant.store_name }}</h3>
+                    <p class="mb-0 text-light opacity-75"><i class="bi bi-geo-alt"></i> {{ merchant.province }} {{ merchant.city }} {{ merchant.district }} {{ merchant.address_detail }} | License: {{ merchant.license_number }}</p>
+                    <div class="mt-2">
+                        <a href="{% url 'edit_store_profile' %}" class="btn btn-outline-light btn-sm me-2">Edit Store Profile</a>
+                        <a href="{% url 'merchant_reviews' %}" class="btn btn-outline-warning btn-sm">View Customer Reviews</a>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <span class="d-block text-uppercase small fw-bold text-light opacity-75">Store Rating</span>
+                    <span class="fs-2 text-warning fw-bold">★ {{ merchant.average_rating }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Active Services List -->
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-white pt-3 border-bottom-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-primary">My Active Services</h5>
+                <a href="{% url 'add_service' %}" class="btn btn-sm btn-outline-primary">Add Service</a>
+            </div>
+            <ul class="list-group list-group-flush mt-2">
+                {% for service in services %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong>{{ service.name }}</strong>
+                        <span class="badge bg-success">¥{{ service.price }}</span>
+                    </div>
+                    <small class="text-muted d-block">{{ service.category.name }}</small>
+                    <div class="mt-2 d-flex gap-1">
+                        <a href="{% url 'edit_service' service.id %}" class="btn btn-sm btn-light">Edit</a>
+                        <form method="POST" action="{% url 'delete_service' service.id %}" class="d-inline" data-confirm="Delete this service? This cannot be undone.">
+                            {% csrf_token %}
+                            <input type="hidden" name="confirmed" value="">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">You haven't added any services yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Order Management -->
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white pt-3 border-bottom-0">
+                <h5 class="mb-0 text-primary">Customer Orders</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer & Pet</th>
+                                <th>Service</th>
+                                <th>Time</th>
+                                <th>Status Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>{{ order.id }}</td>
+                                <td>
+                                    <strong>{{ order.owner.user.username }}</strong><br>
+                                    <small class="text-muted">Pet: {{ order.pet.name }}</small>
+                                </td>
+                                <td>
+                                    {{ order.service.name }}
+                                    {% if order.vaccine_detail and order.vaccine_detail.vaccine %}
+                                        <br><small class="text-muted">Vaccine: {{ order.vaccine_detail.vaccine.full_name|default:order.vaccine_detail.vaccine.vaccine_name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ order.appointment_time|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    <!-- Status Update Form -->
+                                    <form method="POST" action="{% url 'update_order_status' order.id %}" class="d-flex align-items-center">
+                                        {% csrf_token %}
+                                        <select name="status" class="form-select form-select-sm me-2" style="width: 200px;" onchange="this.form.submit()" {% if order.status == 'completed' or order.status == 'cancelled' %}disabled{% endif %}>
+                                            <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                                            <option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                            <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>Completed</option>
+                                            <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                        </select>
+                                        
+                                        <!-- Visual Badge next to disabled selects -->
+                                        {% if order.status == 'completed' %}
+                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Done</span>
+                                        {% elif order.status == 'confirmed' %}
+                                            {% if order.amount_confirmed %}
+                                                <span class="badge bg-info text-dark">Ready to Complete</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Awaiting Owner Confirm</span>
+                                            {% endif %}
+                                        {% elif order.status == 'cancelled' %}
+                                            <span class="badge bg-secondary">Void</span>
+                                        {% endif %}
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No orders received yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

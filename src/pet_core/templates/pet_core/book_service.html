@@ -1,0 +1,124 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Book Service - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow border-0">
+            <div class="card-header bg-primary text-white p-4">
+                <h4 class="mb-1">Book: {{ service.name }}</h4>
+                <p class="mb-0 text-light opacity-75">Provided by {{ service.merchant.store_name }}</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <!-- Service Details Summary -->
+                <div class="row mb-4">
+                    <div class="col-sm-6 text-center border-end">
+                        <span class="d-block text-muted small text-uppercase fw-bold mb-1">Price</span>
+                        <span class="fs-4 fw-bold text-success">¥{{ service.price }}</span>
+                    </div>
+                    <div class="col-sm-6 text-center">
+                        <span class="d-block text-muted small text-uppercase fw-bold mb-1">Category</span>
+                        <span class="fs-5"><span class="badge bg-secondary">{{ service.category.name }}</span></span>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border mb-4">
+                    <strong>Description:</strong><br>
+                    <span class="text-muted">{{ service.description }}</span>
+                </div>
+
+                <hr>
+
+                <!-- Booking Form -->
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Pet</label>
+                        <select name="pet_id" class="form-select form-select-lg" id="petSelect" required>
+                            <option value="" selected disabled>Choose one of your pets...</option>
+                            {% for pet in pets %}
+                                <option value="{{ pet.id }}" data-species="{{ pet.species|escapejs }}">{{ pet.name }} ({{ pet.species }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text mt-2">
+                            Need to book for a new pet? <a href="{% url 'add_pet' %}" class="text-decoration-none">Add a pet here first</a>.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Appointment Date & Time</label>
+                        <style>
+                            #appointmentTimeInput:required:invalid::-webkit-datetime-edit {
+                                color: transparent;
+                            }
+                            #appointmentTimeInput:focus::-webkit-datetime-edit {
+                                color: inherit;
+                            }
+                        </style>
+                        <input type="datetime-local" name="appointment_time" class="form-control form-select-lg" id="appointmentTimeInput" required>
+                    </div>
+
+                    {% if is_vaccine_booking %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Vaccine Type</label>
+                        <select name="vaccine_id" class="form-select form-select-lg" id="vaccineSelect" required disabled>
+                            <option value="" selected disabled>Choose vaccine type...</option>
+                        </select>
+                        <div class="form-text mt-2">Options are filtered by the selected pet species.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Remarks (optional)</label>
+                        <textarea name="vaccine_remarks" class="form-control" rows="3" placeholder="Any notes for the merchant..."></textarea>
+                    </div>
+
+                    <script>
+                        window.__vaccinesByType = {{ vaccines_by_type_json|safe }}
+                        window.__petSpeciesMap = {{ pet_species_map_json|safe }}
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const petSelect = document.getElementById('petSelect')
+                            const vaccineSelect = document.getElementById('vaccineSelect')
+                            if (!petSelect || !vaccineSelect) return
+
+                            function fillVaccinesForSpecies(species) {
+                                vaccineSelect.innerHTML = ''
+                                const placeholder = document.createElement('option')
+                                placeholder.value = ''
+                                placeholder.textContent = 'Choose vaccine type...'
+                                placeholder.disabled = true
+                                placeholder.selected = true
+                                vaccineSelect.appendChild(placeholder)
+
+                                const list = (window.__vaccinesByType || {})[species] || []
+                                list.forEach(function (v) {
+                                    const opt = document.createElement('option')
+                                    opt.value = v.id
+                                    opt.textContent = v.full_name || v.name
+                                    vaccineSelect.appendChild(opt)
+                                })
+                                vaccineSelect.disabled = list.length === 0
+                            }
+
+                            petSelect.addEventListener('change', function () {
+                                const opt = petSelect.options[petSelect.selectedIndex]
+                                const petId = opt ? opt.value : ''
+                                const species = petId ? (window.__petSpeciesMap || {})[petId] || '' : ''
+                                fillVaccinesForSpecies(species)
+                            })
+                        })
+                    </script>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-5">
+                        <a href="{% url 'service_list' %}" class="btn btn-outline-secondary btn-lg px-4">Back</a>
+                        <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">Confirm Booking</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

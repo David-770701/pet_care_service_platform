@@ -1,0 +1,128 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Register - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Create an Account</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-select" required id="roleSelect">
+                            <option value="owner">Pet Owner</option>
+                            <option value="merchant">Merchant</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Province / City</label>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <select name="province" class="form-select" id="provinceSelect" required></select>
+                            </div>
+                            <div class="col-md-6">
+                                <select name="city" class="form-select" id="citySelect" required></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">District</label>
+                        <select name="district" class="form-select" id="districtSelect" required></select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Detailed Address</label>
+                        <input type="text" name="address_detail" class="form-control" placeholder="Street, building, room, etc.">
+                    </div>
+
+                    <!-- Owner Fields -->
+                    <div id="ownerFields">
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Merchant Fields -->
+                    <div id="merchantFields" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Store Name</label>
+                            <input type="text" name="store_name" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">License Number</label>
+                            <input type="text" name="license_number" class="form-control">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                </form>
+                <div class="mt-3 text-center">
+                    Already have an account? <a href="{% url 'login' %}">Login here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('roleSelect').addEventListener('change', function() {
+        const addressDetail = document.querySelector('input[name="address_detail"]')
+        if(this.value === 'owner') {
+            document.getElementById('ownerFields').style.display = 'block';
+            document.getElementById('merchantFields').style.display = 'none';
+            if (addressDetail) addressDetail.required = false
+        } else {
+            document.getElementById('ownerFields').style.display = 'none';
+            document.getElementById('merchantFields').style.display = 'block';
+            if (addressDetail) addressDetail.required = true
+        }
+    });
+</script>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'pet_core/address_cn_3level_cdn.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof window.initCnProvinceCityDistrict === 'function') {
+            window.initCnProvinceCityDistrict({
+                provinceSelectId: 'provinceSelect',
+                citySelectId: 'citySelect',
+                districtSelectId: 'districtSelect',
+                initialProvince: '',
+                initialCity: '',
+                initialDistrict: ''
+            })
+        }
+        const roleSelect = document.getElementById('roleSelect')
+        if (roleSelect) {
+            roleSelect.dispatchEvent(new Event('change'))
+        }
+    })
+</script>
+{% endblock %}

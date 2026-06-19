@@ -1,0 +1,94 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Users - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <h2>Pet Owner Management</h2>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<form method="GET" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <select name="status" class="form-select">
+            <option value="" {% if not status %}selected{% endif %}>All Status</option>
+            <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+            <option value="disabled" {% if status == 'disabled' %}selected{% endif %}>Disabled</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100" type="submit">Filter</button>
+    </div>
+</form>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in page_obj %}
+                <tr>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.get_role_display }}</td>
+                    <td class="text-muted">{{ u.email }}</td>
+                    <td>{{ u.date_joined|date:"Y-m-d" }}</td>
+                    <td>
+                        {% if u.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'admin_toggle_user_active' u.id %}" data-confirm="Change this user's active status?">
+                            {% csrf_token %}
+                            <input type="hidden" name="confirmed" value="">
+                            {% if u.is_active %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Disable</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-sm btn-outline-success">Enable</button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="{% url 'admin_user_list' %}?status={{ status|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="{% url 'admin_user_list' %}?status={{ status|urlencode }}&page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

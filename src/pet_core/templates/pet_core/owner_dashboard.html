@@ -1,0 +1,146 @@
+{% extends 'pet_core/base.html' %}
+
+{% block title %}Owner Dashboard - Pet Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12 d-flex justify-content-between align-items-center">
+        <h2>My Dashboard</h2>
+        <div>
+            <a href="{% url 'vaccine_reminders' %}" class="btn btn-outline-warning btn-sm">Vaccine Reminders</a>
+            <a href="{% url 'edit_profile' %}" class="btn btn-outline-secondary btn-sm">Edit Profile</a>
+            <a href="{% url 'favorite_list' %}" class="btn btn-outline-danger btn-sm">My Favorites</a>
+            <a href="{% url 'my_reviews' %}" class="btn btn-outline-primary btn-sm">My Reviews</a>
+        </div>
+    </div>
+</div>
+
+{% if upcoming_vaccines %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="alert alert-warning shadow-sm border-warning">
+            <h5 class="alert-heading"><i class="bi bi-bell-fill text-danger"></i> Vaccine Reminders</h5>
+            <ul class="mb-0">
+                {% for item in upcoming_vaccines %}
+                <li>Your pet <strong>{{ item.pet.name }}</strong> should take <strong>{{ item.series_name }} - {{ item.next_vaccine_name }}</strong> soon (Due: {{ item.record.next_due_date }}, {{ item.days_left }} day{{ item.days_left|pluralize }} left).</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">My Pets</h5>
+                <a href="{% url 'add_pet' %}" class="btn btn-sm btn-light">Add Pet</a>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for pet in pets %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ pet.name }}</strong> ({{ pet.species }})<br>
+                            <small class="text-muted">{{ pet.breed }} | Age: {{ pet.age }} | {{ pet.get_gender_display }}</small><br>
+                        </div>
+                    </div>
+                    <div class="mt-2 d-flex gap-1">
+                        <a href="{% url 'pet_vaccines' pet.id %}" class="btn btn-sm btn-outline-success">Vaccines</a>
+                        <a href="{% url 'edit_pet' pet.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <form method="POST" action="{% url 'delete_pet' pet.id %}" class="d-inline" data-confirm="Delete this pet? This cannot be undone.">
+                            {% csrf_token %}
+                            <input type="hidden" name="confirmed" value="">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">You haven't added any pets yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">My Appointments / Orders</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Service</th>
+                                <th>Pet</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>#{{ order.id }}</td>
+                                <td>
+                                    <a href="{% url 'merchant_detail' order.service.merchant.user_id %}" class="text-decoration-none fw-bold">{{ order.service.merchant.store_name }}</a><br>
+                                    <small class="text-muted">{{ order.service.name }}</small>
+                                    {% if order.vaccine_detail and order.vaccine_detail.vaccine %}
+                                        <br><small class="text-muted">Vaccine: {{ order.vaccine_detail.vaccine.full_name|default:order.vaccine_detail.vaccine.vaccine_name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ order.pet.name }}</td>
+                                <td>{{ order.appointment_time|date:"Y-m-d H:i" }}<br><small>¥{{ order.service.price }}</small></td>
+                                <td>
+                                    {% if order.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif order.status == 'confirmed' %}
+                                        {% if order.amount_confirmed %}
+                                            <span class="badge bg-info text-dark">Confirmed (Awaiting Completion)</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Confirmed (Confirm Amount)</span>
+                                        {% endif %}
+                                    {% elif order.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if order.status == 'confirmed' %}
+                                        {% if not order.amount_confirmed %}
+                                            <a href="{% url 'pay_order' order.id %}" class="btn btn-sm btn-danger">Confirm Amount</a>
+                                        {% else %}
+                                            <span class="text-muted small">Waiting merchant</span>
+                                        {% endif %}
+                                    {% elif order.status == 'pending' %}
+                                        <form method="POST" action="{% url 'cancel_order' order.id %}" class="d-inline" data-confirm="{% if order.status == 'confirmed' %}该订单已被商家确认，是否确定取消预约？{% else %}确定取消该预约吗？{% endif %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="confirmed" value="">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                        </form>
+                                    {% elif order.status == 'completed' %}
+                                        {% if not order.has_review %}
+                                            <a href="{% url 'write_review' order.id %}" class="btn btn-sm btn-outline-primary">Review</a>
+                                        {% else %}
+                                            <span class="text-muted small">Reviewed</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">You have no orders yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
