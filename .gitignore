@@ -19,6 +19,7 @@ db.sqlite3
 media/
 staticfiles/
 .env
+.env.*
 *.log
 *.err
 *.pid
@@ -29,10 +30,11 @@ staticfiles/
 .DS_Store
 Thumbs.db
 
-# Data collection, preprocessing, and local datasets
-data/final_data/
+# Local-only project materials
+data/
+docs/
+scripts/
 pet_services_complete_data/
-amap_crawler_complete.log
 
 # Temporary local references
 .codex_reference_*/

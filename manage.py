@@ -9,7 +9,7 @@ def main():
     """Run administrative tasks."""
     project_src = Path(__file__).resolve().parent
     sys.path.insert(0, str(project_src))
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pet_service_project.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

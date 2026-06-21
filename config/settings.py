@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'pet_core.apps.PetCoreConfig',
+    'pet_services.apps.PetServicesConfig',
 ]
 
 AUTH_USER_MODEL = 'pet_core.User'
@@ -46,7 +46,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'pet_service_project.urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -58,13 +58,13 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'pet_core.context_processors.service_categories',
+                'pet_services.context_processors.service_categories',
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'pet_service_project.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
